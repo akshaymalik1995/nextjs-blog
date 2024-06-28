@@ -5,19 +5,19 @@ export const slugify = (text) => {
     // Add a random number of six digits to the end of the slug to avoid conflicts
     const randomNumber = Math.floor(Math.random() * 1000000)
     text = text.toString().toLowerCase()
-    .replace(/\s/g, '-') // Replace spaces with -
-    // Remove all symbols except -
-    .replace(/[^\w-]+/g, '')
-    .replace(/--/g, '-') // Replace multiple - with single -
-    .replace(/^-/, "") // Trim - from start of text
-    .replace(/-$/, "") // Trim - from end of text
+        .replace(/\s/g, '-') // Replace spaces with -
+        // Remove all symbols except -
+        .replace(/[^\w-]+/g, '')
+        .replace(/--/g, '-') // Replace multiple - with single -
+        .replace(/^-/, "") // Trim - from start of text
+        .replace(/-$/, "") // Trim - from end of text
     text = text + "-" + randomNumber
     return text
 }
 
 
 export const cacheContent = (req, res) => {
-        res.setHeader('Cache-Control', 'public, max-age=120, stale-while-revalidate=30')
+    res.setHeader('Cache-Control', 'public, max-age=120, stale-while-revalidate=30')
 }
 
 
@@ -34,21 +34,30 @@ export const serializePosts = (posts) => {
     if (posts && posts.length > 0) {
         return posts.map(post => {
             return {
-              ...post,
-              createdAt: formatDate(post.createdAt),
-              updatedAt: formatDate(post.updatedAt),
+                ...post,
+                createdAt: formatDate(post.createdAt),
+                updatedAt: formatDate(post.updatedAt),
             }
-          })
+        })
     }
 }
 
-import {remark} from 'remark'
+import { remark } from 'remark'
 import html from 'remark-html'
 import highlight from 'remark-highlight.js'
 
 export async function markdownToHtml(markdown) {
-    let result = await remark().use(html, {sanitize: false}).use(highlight).process(markdown)
-    return result.toString()
+    let result = ""
+    try {
+        result = await remark().use(html, { sanitize: false }).use(highlight).process(markdown)
+        return result.toString()
+    } catch (error) {
+        console.log(error)
+        result = await remark().use(html, { sanitize: false }).process(markdown)
+        return result.toString()
+    }
+
+
 }
 
 // Find a post by its slug
@@ -62,8 +71,8 @@ export async function getPostBySlug(slug) {
             },
             include: {
                 tags: true
-        }
-    })
+            }
+        })
     }
     catch (error) {
         console.log(error)
@@ -74,7 +83,7 @@ export async function getPostBySlug(slug) {
     return post
 }
 
-            
+
 
 // Get all tags connected to a post  
 export async function getTagsByPostId(id) {
@@ -114,8 +123,8 @@ export async function getTagsAndCounts() {
                     select: {
                         posts: true,
                     },
-                    
-                    
+
+
                 }
             },
             // Order the tags by name in descending order
@@ -162,7 +171,7 @@ export async function getPostsByTag(tag) {
 // Get Posts from database
 
 
-export async function getPosts({skip = 0, take = undefined, orderBy = "desc"}) {
+export async function getPosts({ skip = 0, take = undefined, orderBy = "desc" }) {
     const prisma = new PrismaClient()
     let posts = []
     try {
@@ -176,9 +185,9 @@ export async function getPosts({skip = 0, take = undefined, orderBy = "desc"}) {
             // Tags should be a list of objects with name and id
             include: {
                 tags: {
-                    select : {
-                        name : true,
-                        id : true
+                    select: {
+                        name: true,
+                        id: true
                     }
                 }
             }
@@ -192,7 +201,7 @@ export async function getPosts({skip = 0, take = undefined, orderBy = "desc"}) {
         await prisma.$disconnect()
     }
 
-    
+
 
     return serializePosts(posts)
 }
